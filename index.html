@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Data Selling — Secure Payment</title>
+<style>
+  :root{
+    --bg1: linear-gradient(135deg,#fdfbfb 0%, #ebedee 100%);
+    --card:#ffffff;
+    --accent1:#ff6b6b;
+    --accent2:#ffd166;
+    --accent3:#6bc1ff;
+    --text:#0b1220;
+    --muted:#56606a;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; min-height:100vh; background:linear-gradient(180deg,#fff7fb,#f7fbff); color:var(--text); display:flex; align-items:center; justify-content:center; padding:24px;}
+  .wrap{width:100%; max-width:1024px;}
+  header{padding:20px; border-radius:12px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white; box-shadow:0 10px 30px rgba(11,20,40,0.08);}
+  header h1{margin:0; font-size:20px;}
+  main{display:grid; grid-template-columns:1fr 360px; gap:18px; margin-top:18px;}
+  .panel{background:var(--card); border-radius:12px; padding:18px; box-shadow:0 8px 28px rgba(13,24,32,0.06);}
+  .label{font-size:13px; color:var(--muted);}
+  .upi{font-weight:700; font-size:16px; margin:8px 0 12px 0;}
+  .qr-row{display:flex; gap:14px; align-items:center;}
+  .qr{width:220px; height:220px; background:linear-gradient(180deg,#fff,#f3f9ff); border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid #e6f0fb;}
+  .qr img{max-width:100%; height:auto; display:block;}
+  .actions{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;}
+  .btn{display:inline-flex; gap:8px; align-items:center; padding:10px 14px; border-radius:10px; background:linear-gradient(90deg,var(--accent3),#7ef0c7); color:#04323b; text-decoration:none; cursor:pointer; border:none; font-weight:700;}
+  .btn.ghost{background:white; color:var(--text); border:1px solid #e7eef6; font-weight:600;}
+  .small{font-size:13px; padding:8px 10px;}
+  .note{margin-top:12px; font-size:13px; color:var(--muted); background:linear-gradient(90deg,rgba(107,193,255,0.06),transparent); padding:10px; border-radius:8px;}
+  .withdraw-list{height:220px; overflow:hidden; border-radius:10px; background:linear-gradient(180deg,#fff,#fbfffc); padding:8px; border:1px solid #eef9f3;}
+  .withdraw-item{display:flex; justify-content:space-between; padding:8px 10px; border-bottom:1px dashed #eef6ef; font-size:14px; align-items:center;}
+  .muted{color:var(--muted); font-size:13px;}
+  footer{margin-top:14px; color:var(--muted); font-size:13px; text-align:center;}
+  .modal-backdrop{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(6,9,10,0.45); z-index:1200;}
+  .modal{background:white; width:480px; max-width:94%; border-radius:12px; padding:18px; box-shadow:0 20px 40px rgba(2,6,8,0.25);}
+  input[type=text], textarea{padding:10px; border-radius:8px; border:1px solid #e6eef0; width:100%; font-size:14px;}
+  .row{display:flex; gap:8px;}
+  @media (max-width:900px){ main{grid-template-columns:1fr; } .qr{width:180px;height:180px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="panel">
+    <h1>Data Selling — Secure Payment Portal</h1>
+  </header>
+
+  <main>
+    <section class="panel left">
+      <div class="label">Make Payment</div>
+      <div class="upi">UPI ID: <strong>6005099281@mbk</strong></div>
+
+      <div class="qr-row">
+        <div class="qr" id="qrHolder" title="Scan to pay">
+          <img src="qr_code.jpeg" alt="QR Code" id="qrImg">
+        </div>
+
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:700; font-size:15px;">Scan QR or copy UPI</div>
+          <div style="margin-top:8px; color:var(--muted); font-size:13px;">After payment, click <strong>Get App</strong> and submit your transaction UTR for verification.</div>
+          <div class="actions">
+            <a class="btn" href="https://wa.me/916005099281" target="_blank">💬 WhatsApp</a>
+            <button class="btn ghost small" onclick="openRefund()">↩ Refund</button>
+            <button class="btn small ghost" onclick="refreshStatus()">🔄 Refresh</button>
+            <button class="btn" onclick="openGetApp()">📥 Get App</button>
+          </div>
+          <div class="muted" style="margin-top:10px;">Customer Care (WhatsApp): <strong>6005099281</strong></div>
+        </div>
+      </div>
+
+      <div class="note">
+        Payments must be completed before downloading. Submit UTR for verification. Verification may take 15–30 minutes.
+      </div>
+    </section>
+
+    <aside class="panel right">
+      <div style="font-weight:800; font-size:15px; margin-bottom:8px;">Live Withdrawal Activity</div>
+      <div class="withdraw-list" id="withdrawList" aria-live="polite"></div>
+
+      <div style="margin-top:12px;">
+        <div style="font-weight:700; margin-bottom:6px;">Referral</div>
+        <div class="muted" style="font-size:13px;">Share your referral link to earn rewards (demo).</div>
+        <input type="text" id="refLink" readonly value="https://example.com/ref=USER123" style="margin-top:8px; padding:8px; border-radius:8px; border:1px solid #e6eef0;">
+      </div>
+
+    </aside>
+  </main>
+
+  <footer>© 2025 Data Selling Portal • UPI: 6005099281@mbk • WhatsApp: 6005099281</footer>
+</div>
+
+<!-- Modals -->
+<div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+  <div class="modal" id="getAppModal">
+    <h3>Payment Pending — Verify Payment</h3>
+    <p style="color:#55606a;">Our system shows no confirmed payment yet. If you have paid, submit your transaction reference (UTR / Txn ID) for verification. Verification may take 15–30 minutes.</p>
+    <div style="margin-top:10px;">
+      <input id="payerName" type="text" placeholder="Your name (optional)">
+      <input id="txnId" type="text" placeholder="Transaction UTR / Txn ID" style="margin-top:8px;">
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn" onclick="submitUTR()">Submit UTR & Wait</button>
+        <button class="btn ghost" onclick="closeModal()">Close</button>
+      </div>
+      <div id="utrMsg" style="margin-top:8px; color:var(--muted); font-size:13px;"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="refundModal" style="display:none; margin-top:8px;">
+    <h3>Request Refund</h3>
+    <p style="color:#55606a;">Fill details to request a refund. Our team will review and respond on WhatsApp.</p>
+    <div style="margin-top:8px;">
+      <input id="rName" type="text" placeholder="Name">
+      <input id="rTxn" type="text" placeholder="Transaction UTR / Txn ID" style="margin-top:8px;">
+      <textarea id="rReason" rows="3" placeholder="Reason for refund" style="margin-top:8px;"></textarea>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn" onclick="submitRefund()">Send Refund Request</button>
+        <button class="btn ghost" onclick="closeRefund()">Cancel</button>
+      </div>
+      <div id="refundMsg" style="margin-top:8px; color:var(--muted); font-size:13px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Generate random withdrawal data (20-30 entries) and continuously animate display
+function randChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randAmount(){
+  const pool = [200,300,500,700,800,1200,1500,2500,3000,3500];
+  return randChoice(pool);
+}
+function randId(prefix='USR'){
+  return prefix + (1000 + Math.floor(Math.random()*9000));
+}
+function randTxn(){
+  const s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let t='TX';
+  for(let i=0;i<8;i++) t+=s[Math.floor(Math.random()*s.length)];
+  return t;
+}
+
+const withdrawals = [];
+const total = 24;
+for(let i=0;i<total;i++){
+  withdrawals.push({
+    id: randId(),
+    txn: randTxn(),
+    amount: randAmount()
+  });
+}
+
+const listEl = document.getElementById('withdrawList');
+let idx = 0;
+function renderBlock(){
+  listEl.innerHTML = '';
+  for(let i=0;i<6;i++){
+    const it = withdrawals[(idx+i) % withdrawals.length];
+    const div = document.createElement('div');
+    div.className = 'withdraw-item';
+    div.innerHTML = '<div><strong>'+it.id+'</strong><div style="font-size:12px;color:#6b7280;">'+it.txn+'</div></div><div style="text-align:right;"><div style="color:green;font-weight:700;">₹'+it.amount+'</div><div style="font-size:12px;color:#6b7280;">Successful</div></div>';
+    listEl.appendChild(div);
+  }
+  idx = (idx + 1) % withdrawals.length;
+}
+// initial render and interval
+renderBlock();
+setInterval(renderBlock, 2800);
+
+// Modal controls
+function openGetApp(){
+  document.getElementById('modalBackdrop').style.display='flex';
+  document.getElementById('getAppModal').style.display='block';
+  document.getElementById('refundModal').style.display='none';
+}
+function closeModal(){ document.getElementById('modalBackdrop').style.display='none'; }
+function openRefund(){ document.getElementById('modalBackdrop').style.display='flex'; document.getElementById('refundModal').style.display='block'; document.getElementById('getAppModal').style.display='none'; }
+function closeRefund(){ document.getElementById('modalBackdrop').style.display='none'; }
+
+// UTR submit simulation
+function submitUTR(){
+  const txn = document.getElementById('txnId').value.trim();
+  if(!txn){ document.getElementById('utrMsg').innerText='Please enter your transaction reference.'; return; }
+  document.getElementById('utrMsg').innerText='UTR submitted. Please wait 15–30 minutes for verification. We will contact you on WhatsApp.';
+  setTimeout(()=>{ document.getElementById('utrMsg').innerText='Verification in progress...'; }, 2200);
+}
+
+// Refund submit simulation
+function submitRefund(){
+  const rTxn = document.getElementById('rTxn').value.trim();
+  const rReason = document.getElementById('rReason').value.trim();
+  if(!rTxn){ document.getElementById('refundMsg').innerText='Please enter transaction id.'; return; }
+  document.getElementById('refundMsg').innerText='Refund request sent. We will contact you on WhatsApp.';
+}
+
+// Refresh status simulation
+function refreshStatus(){
+  const el = document.getElementById('qrHolder');
+  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:400});
+  setTimeout(()=>{ alert('Status: Payment not received yet. Please complete the payment and submit UTR.'); }, 200);
+}
+
+</script>
+</body>
+</html>
